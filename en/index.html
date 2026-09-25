@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Raven · An AI agent that runs its own experiments</title>
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<header class="hero" id="top">
+  <nav class="lang" aria-label="Language"><a href="../index.html" hreflang="zh-CN" lang="zh-CN">中文</a><span aria-current="page">EN</span></nav>
+  <div class="hero-bg">
+    <img src="../assets/generated/hero-stair-g2.webp" width="1536" height="864" alt="" decoding="async">
+    <span class="hero-note hero-note-m">Illustration</span>
+  </div>
+  <div class="hero-head">
+    <p class="sec-tag hero-kicker">Raven · an AI agent that runs its own experiments</p>
+    <h1><span class="l">Standing on</span> <span class="l">its own shoulders</span></h1>
+    <p class="lede">Give it a goal, and it edits the code and settings, runs the experiment, reads the results, then decides what to change next. Here are four real experiments it ran.</p>
+  </div>
+  <nav class="runs" aria-label="Four experiments">
+    <span class="hero-note hero-note-d">Illustration</span>
+    <a class="run" href="#nanochat">
+      <span class="run-fig" aria-label="minus 5.8%"><span class="minus" aria-hidden="true">−</span><span aria-hidden="true">5.8%</span></span>
+      <h2 class="run-name">Training a language <span class="l">model <span class="go" aria-hidden="true">↓</span></span></h2>
+      <p>With the same <span class="l">20 minutes</span> of training every time, it rewrote the training code itself over <span class="l">7 rounds</span>, and the small model’s prediction error fell by <span class="l">5.8%</span>.</p>
+    </a>
+    <a class="run" href="#cfd">
+      <span class="run-fig">7 rounds</span>
+      <h2 class="run-name">Simulating a dam <span class="l">break <span class="go" aria-hidden="true">↓</span></span></h2>
+      <p>Chasing speed, it crashed the simulation three times. Then it went back to safe settings and shrank the unphysical errors round by round, though not yet to zero.</p>
+    </a>
+    <a class="run" href="#fea">
+      <span class="run-fig">8 rounds</span>
+      <h2 class="run-name">Finding the software’s <span class="l">limit <span class="go" aria-hidden="true">↓</span></span></h2>
+      <p>Like a guessing game, it halved the gap on a simulated beam’s load for <span class="l">8 rounds</span>, closing in on where the software stops computing. Not a force the beam could carry.</p>
+    </a>
+    <a class="run" href="#ai4ai">
+      <span class="run-fig">$6.12</span>
+      <h2 class="run-name">Research on the <span class="l">cheap <span class="go" aria-hidden="true">↓</span></span></h2>
+      <p>Given <span class="l">$50</span>, the teams on pricier models spent every cent. Raven, running on a cheap model, spent just <span class="l">$6.12</span> and trained the best model of them all.</p>
+    </a>
+  </nav>
+</header>
+
+<main>
+<section class="sec sec-nano" id="nanochat">
+  <div class="sec-head">
+    <p class="sec-tag">Experiment 1 · nanochat</p>
+    <h2>7 rounds of rewrites. Same 20&nbsp;minutes. A&nbsp;model that guesses better.</h2>
+    <p class="sec-sub">nanochat is an open project for training small language models. The rules are fixed: one A800 GPU, 20 minutes per training run. Raven (powered by DeepSeek v4.1-flash with the ai4ai plugin) read each round’s results, edited the training script <code>train.py</code> itself and launched new runs, for 7 rounds.</p>
+  </div>
+
+  <div class="nano-claim">
+    <div class="big" aria-label="val_bpb from 0.9956 down to 0.9381">
+      <span class="from">0.9956</span><span class="arrow">→</span><span class="to">0.9381</span>
+    </div>
+    <div class="claim-text">
+      <p class="metric"><strong>val_bpb, lower is better</strong></p>
+      <p>The official <code>train.py</code> starts at 0.9956. The round-7 recipe reaches 0.9381 (mean of 3 runs with different random seeds, ±0.0007): <strong>5.8% lower</strong>.</p>
+    </div>
+  </div>
+
+  <figure class="chart-wrap">
+    <div id="chart-nano" class="chart"></div>
+    <figcaption>Grey dots: every training run (170 with results, plus 2 that produced none). Blue line: the best recipe of each round, averaged over its runs; vertical bars span one standard deviation either side. Dashed line: the official <code>train.py</code> starting point. Hover a dot for its values.</figcaption>
+  </figure>
+
+  <div class="nano-win">
+    <h3>Not done yet: the experiment stopped because the GPU budget ran out, not because the gains did.</h3>
+    <p>Each of the last two rounds (6 and 7) improved by far more than the run-to-run noise (0.0013), and the curve is still heading down. Over 7 rounds: 172 training runs, not one crash, 3586 of the 3600 budgeted GPU minutes used.</p>
+  </div>
+
+  <details class="more">
+    <summary>What is val_bpb?</summary>
+    <p class="more-p">It measures how surprised the model is by text it has never seen. The model predicts the text one piece at a time, and the uncertainty of those predictions is converted into bits per byte of text. The lower the number, the better the model guesses.</p>
+  </details>
+  <details class="more">
+    <summary>The 7 changes the final recipe makes to the official code</summary>
+    <ol class="changes">
+      <li>Half the data per step (batch 2<sup>19</sup> → 2<sup>18</sup>), so 20 minutes fit 3055 steps instead of 1540</li>
+      <li>A new learnable lookup table for pairs of neighbouring tokens, 100× the vocabulary size (819200 rows)</li>
+      <li>The table’s output is added to the model right after layer 0</li>
+      <li>Learning rate <code>MATRIX_LR</code> lowered from 0.04 to 0.02</li>
+      <li>Short attention window cut from 1024 to 256</li>
+      <li>A wider model: <code>ASPECT_RATIO</code> 64 → 80 (width 512 → 640)</li>
+      <li>Evaluation batch fixed at 128</li>
+    </ol>
+  </details>
+  <details class="more">
+    <summary>Best recipe in each round</summary>
+    <div class="tbl-scroll"><table class="tbl" id="tbl-nano">
+      <thead><tr><th>Round</th><th>Recipe</th><th class="n">val_bpb</th><th class="n">Seeds</th><th class="n">GPU min</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </details>
+
+  <p class="fine">Notes: the final recipe has only 3 seeds so far; Raven’s own report recommends 7–8. The wider model is about 30% slower per step, so 20 minutes fit 2363 steps instead of 3055, and it still scores lower. That is the net effect under a fixed time budget, as the rules intend. A “real improvement” means beating the previous round’s best with Welch |t| &gt; 3 and |Δ| &gt; 0.002. None of round 1’s 9 candidates passed; every round from round 2 on set a new best.</p>
+</section>
+
+
+<section class="sec" id="cfd">
+  <div class="sec-head">
+    <p class="sec-tag">Experiment 2 · CFD dam-break simulation</p>
+    <h2>Three crashes chasing speed. Then it backed off and shrank the error, round by round.</h2>
+    <p class="sec-sub">CFD (computational fluid dynamics) means simulating how liquids and gases flow. This run used the open-source OpenFOAM to simulate a 2D dam break: a column of water collapses and slams into the far wall. Same case, 81648 cells, 7 rounds (0–6). Each cell records what fraction of it is water (called alpha), which must stay between 0 and 1. A negative value, or one above 1, is an unphysical error: the cell is “out of bounds”.</p>
+  </div>
+
+  <figure class="frames">
+    <ol class="frames-row">
+      <li><img src="../assets/img/cfd/r0.webp" width="480" height="480" alt="Round 0: water surges up the right wall, surface intact" loading="lazy"><b>Round 0</b><span>Safe settings, ran to the end</span></li>
+      <li class="bad"><img src="../assets/img/cfd/r1.webp" width="480" height="480" alt="Round 1: the water breaks into a jumble" loading="lazy"><b>Round 1</b><span>Faster, crashed at t=0.4</span></li>
+      <li class="bad"><img src="../assets/img/cfd/r2.webp" width="480" height="480" alt="Round 2: the water breaks apart, red out-of-bounds cells appear" loading="lazy"><b>Round 2</b><span>Faster still, crashed at t=0.5</span></li>
+      <li class="bad"><img src="../assets/img/cfd/r3.webp" width="480" height="480" alt="Round 3: the surface smears out, many red out-of-bounds cells" loading="lazy"><b>Round 3</b><span>Faster still, crashed at t=0.65</span></li>
+      <li><img src="../assets/img/cfd/r4.webp" width="480" height="480" alt="Round 4: water surges up the right wall, surface intact" loading="lazy"><b>Round 4</b><span>Back to safe, ran to the end</span></li>
+      <li><img src="../assets/img/cfd/r5.webp" width="480" height="480" alt="Round 5: water surges up the right wall" loading="lazy"><b>Round 5</b><span>Smaller error, blurrier surface</span></li>
+      <li><img src="../assets/img/cfd/r6.webp" width="480" height="480" alt="Round 6: water surges up the right wall" loading="lazy"><b>Round 6</b><span>Smallest error</span></li>
+    </ol>
+    <figcaption>One frame per round, taken from the simulation animation in the source package. Dark blue is water, light is air, red dots are out-of-bounds cells. Rounds that finished show the same moment, as the water hits the right wall; crashed rounds show the last frame before they stopped. t is time inside the simulation; the run ends at t=1.0. <button type="button" class="play" data-dialog="cfd-motion">▶ Play the full simulation</button></figcaption>
+  </figure>
+  <dialog class="motion-dlg" id="cfd-motion" aria-label="Full dam-break simulation">
+    <form method="dialog"><button class="dlg-x" aria-label="Close">Close ×</button></form>
+    <video src="../assets/motion/cfd_readme_vertical_en.mp4" controls playsinline preload="none"></video>
+  </dialog>
+
+  <div class="pts pts-2">
+    <div>
+      <h3>First, chasing speed: bigger and bigger steps, three crashes</h3>
+      <p>Rounds 1–3 made each step forward in time larger and larger (the maxCo setting, raised from 1 to 20, 100 and 500). Out-of-bounds cells jumped from 0 to 241, 3877 and 1241, and none of the three reached the end.</p>
+      <figure class="chart-wrap chart-mini"><div id="chart-cfd-a" class="chart"></div></figure>
+    </div>
+    <div>
+      <h3>Then, backing off: the error shrinks every round, but isn’t zero yet</h3>
+      <p>Round 4 set maxCo back to 1: it ran to the end and conserved the water volume. Rounds 5 and 6 refined how the water surface is computed, and the out-of-bounds size kept falling. The criterion demands the water fraction stay strictly within 0 to 1, which floating-point math can’t guarantee: rounds 4–6 all missed by just <span class="l">1e-7</span> to <span class="l">1e-10</span>, so they are <strong>still marked as not passing</strong>.</p>
+      <figure class="chart-wrap chart-mini"><div id="chart-cfd-b" class="chart"></div></figure>
+    </div>
+  </div>
+
+  <details class="more">
+    <summary>What changed in each round</summary>
+    <div class="tbl-scroll"><table class="tbl" id="tbl-cfd">
+      <thead><tr><th class="n">Round</th><th>Change</th><th>Result</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </details>
+  <p class="fine">Note: out-of-bounds counts and sizes were measured by the rendering script; Raven’s own report measured at a different place, so this page uses the rendering script’s numbers throughout. Round 4 is recorded as an alpha minimum of <span class="l">−1.97e-07</span>; the chart plots its size, <span class="l">1.97e-07</span>.</p>
+</section>
+
+
+<section class="sec" id="fea">
+  <div class="sec-head">
+    <p class="sec-tag">Experiment 3 · FEA cantilever beam</p>
+    <h2>Halving the gap like a guessing game: 8 rounds to close in on where the software gives up</h2>
+    <p class="sec-sub"><strong>This is the software’s computing limit, not a force the beam could actually carry.</strong> FEA (finite element analysis) splits a structure into many small pieces to work out the forces on it. In this run (2026-08-17), the open-source CalculiX loaded a beam fixed at one end. The bigger the load, the harder it is to compute; past a certain point the software fails to converge, meaning it keeps iterating without reaching an answer. Raven hunted for that point by bisection: if it computes, push harder; if not, back off; always try the midpoint.</p>
+  </div>
+
+  <figure class="chart-wrap fea-chart">
+    <div id="chart-fea" class="chart"></div>
+    <figcaption><span class="l"><span class="k k-ok"></span>Computes (converged)</span> <span class="l"><span class="k k-bad">×</span>Fails (did not converge)</span> <span class="l"><span class="k k-band"></span>Where the limit must lie, narrowing each round</span>
+      <span class="media-note"><button type="button" class="play" data-dialog="fea-motion">▶ Watch the 8-round animation</button> <strong>The tearing and the 30% cap on displayed deformation are visual effects only, not fractures computed by the solver.</strong></span></figcaption>
+  </figure>
+  <dialog class="motion-dlg" id="fea-motion" aria-label="8-round beam animation">
+    <form method="dialog"><button class="dlg-x" aria-label="Close">Close ×</button></form>
+    <video src="../assets/motion/fea_readme_vertical_en.mp4" controls playsinline preload="none"></video>
+    <p class="dlg-note">The tearing and the 30% cap on displayed deformation are visual effects only, not fractures computed by the solver.</p>
+  </dialog>
+
+  <div class="pts pts-3">
+    <div>
+      <h3>Big steps first, then halves</h3>
+      <p>Round 0 at <span class="l">2000 kN</span> failed; round 1 dropped to <span class="l">1800 kN</span> and computed. From then on, each round tried the midpoint between the largest load that worked and the smallest that didn’t.</p>
+    </div>
+    <div>
+      <h3>Pinned between two loads</h3>
+      <p><span class="l">1962.5 kN</span> still computes; <span class="l">1965.625 kN</span> doesn’t. The run was logged as “bisection converged” and finished normally, with 107 events recorded along the way.</p>
+    </div>
+    <div>
+      <h3>The beam itself could never take this</h3>
+      <p>From its material and cross-section, the beam’s theoretical plastic limit is only <span class="l">62.5 kN</span>, and every load in all 8 rounds is far beyond it. About <span class="l">1962.5 kN</span> is simply the largest load the software can still finish computing.</p>
+    </div>
+  </div>
+
+  <details class="more">
+    <summary>Load and result in each round</summary>
+    <div class="tbl-scroll"><table class="tbl tbl-fea" id="tbl-fea">
+      <colgroup><col class="c-r"><col class="c-l"><col class="c-o"><col class="c-t"></colgroup>
+      <thead><tr><th class="n">Round</th><th class="n">Load (kN)</th><th>Result</th><th class="n">Run time</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </details>
+</section>
+
+
+<section class="sec" id="ai4ai">
+  <div class="sec-head">
+    <p class="sec-tag">Experiment 4 · AI4AI cost comparison</p>
+    <h2>Raven on a cheap model: a fraction of the cost, still at the front</h2>
+    <p class="sec-sub">A separate experiment with different budget rules from nanochat above, so the numbers aren’t comparable. The task: use nanochat to prepare a 50M pretrained model, scored by BPB (how badly it predicts text; lower is better; the A800 baseline is 1.108). Raven or Claude Code, each paired with a model, competed under two budgets.</p>
+  </div>
+
+  <ul class="legend" aria-label="Legend">
+    <li><span class="k k-v41"></span>Raven · V4.1 (cheap model)</li>
+    <li><span class="k k-raven"></span>Raven · other models</li>
+    <li><span class="k k-cc"></span>Claude Code · Opus 5 (for comparison)</li>
+  </ul>
+  <div class="ai-grid">
+    <div class="ai-panel">
+      <h3>5 hours, no spending cap</h3>
+      <p class="ai-say"><strong>The same 1.037 league, 40× cheaper.</strong> V4.1 cost $0.97; Opus 5 cost $39.41. On the same Opus 5, Raven scored 1.038 and Claude Code 1.053.</p>
+      <div id="chart-ai-5h" class="chart"></div>
+    </div>
+    <div class="ai-panel">
+      <h3>$50, no time limit</h3>
+      <p class="ai-say"><strong>$6.12 spent, best score of all: 0.965.</strong> The three pricier setups used up the budget; cheap V4.1 could run for 80+ hours and explore more.</p>
+      <div id="chart-ai-50" class="chart"></div>
+    </div>
+  </div>
+
+  <details class="more">
+    <summary>Full data for both budgets</summary>
+    <div class="ai-tables">
+      <div class="tbl-scroll"><table class="tbl" id="tbl-ai-5h"><caption>5 hours</caption><thead><tr><th>Setup · model</th><th class="n">Time</th><th class="n">Tokens</th><th class="n">Cost</th><th class="n">BPB</th></tr></thead><tbody></tbody></table></div>
+      <div class="tbl-scroll"><table class="tbl" id="tbl-ai-50"><caption>$50</caption><thead><tr><th>Setup · model</th><th class="n">Time</th><th class="n">Tokens</th><th class="n">Cost</th><th class="n">BPB</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </details>
+
+  <div class="method">
+    <p class="method-lead">A harness doesn’t make the model smarter. It makes the model work reliably.<br>Don’t trust what the model says about itself; trust only evidence you can check.</p>
+    <details class="more">
+      <summary>How Raven does it</summary>
+      <dl class="method-list">
+        <div><dt>Multi-agent orchestration</dt><dd>Agents hand over artefacts by contract instead of negotiating opinions; writing code and running experiments are kept apart so measurements stay clean; shared memory supports long runs and saves tokens.</dd></div>
+        <div><dt>Research</dt><dd>Strategy adapts to budget, how much has been retrieved and whether it is enough; difficulty is judged from retrieved evidence, not assumed up front.</dd></div>
+        <div><dt>Code</dt><dd>Beyond implementation: independent acceptance checks and tests; objective facts are read by tools, not taken from the model’s own account.</dd></div>
+        <div><dt>Watch duty</dt><dd>Submits jobs itself, schedules check-ins, decides to redo or stop; writes its own timers, heartbeats and session keep-alives.</dd></div>
+        <div><dt>The ai4ai loop</dt><dd>Propose directions (DR + breadth-first) → implement → check validity → measure → close out with evidence, or dig deeper depth-first.</dd></div>
+        <div><dt>Idea seed bank</dt><dd>Records which directions have and haven’t been tried, so Raven knows where things stand and can explore and combine new ones.</dd></div>
+      </dl>
+    </details>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <h2>Data sources</h2>
+  <ul>
+    <li><strong>nanochat</strong>: the ar-r15 experiment notes (nanochat/README.md), the best recipe of each round (round_best.csv) and every training run (all_trials.csv). GPU minutes 3586 / 3600 are from the README.</li>
+    <li><strong>CFD / FEA</strong>: the per-round tables in the source package’s cfd-fea/README; the animations are finished assets from the package.</li>
+    <li><strong>AI4AI</strong>: the Raven × ai4ai data slides (Raven-ai4ai-data.pptx).</li>
+  </ul>
+  <p><a href="#top">Back to top ↑</a></p>
+</footer>
+
+<script src="../vendor/d3.min.js"></script>
+<script src="../vendor/plot.umd.min.js"></script>
+<script src="../assets/data.js"></script>
+<script src="../assets/charts.js"></script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Raven 多轮自我改进实验</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="hero" id="top">
+  <nav class="lang" aria-label="语言 / Language"><span aria-current="page">中文</span><a href="en/index.html" hreflang="en" lang="en">EN</a></nav>
+  <div class="hero-bg">
+    <img src="assets/generated/hero-stair-g2.webp" width="1536" height="864" alt="" decoding="async">
+    <span class="hero-note hero-note-m">示意图</span>
+  </div>
+  <div class="hero-head">
+    <p class="sec-tag hero-kicker">Raven · 会自己做实验的 AI 智能体</p>
+    <h1><span class="l">每一轮，</span><span class="l">都站在上一轮之上</span></h1>
+    <p class="lede"><span class="l">给它一个目标，</span><span class="l">它自己改代码和参数、</span><span class="l">跑实验、看结果，</span><span class="l">再决定下一轮怎么改。</span><span class="l">下面是它做过的四场真实实验。</span></p>
+  </div>
+  <nav class="runs" aria-label="四场实验">
+    <span class="hero-note hero-note-d">示意图</span>
+    <a class="run" href="#nanochat">
+      <span class="run-fig" aria-label="负 5.8%"><span class="minus" aria-hidden="true">−</span><span aria-hidden="true">5.8%</span></span>
+      <h2 class="run-name">训练一个小语言模型 <span class="go" aria-hidden="true">↓</span></h2>
+      <p>训练时间不变，每次只训练 <span class="l">20 分钟</span>；它自己改了 <span class="l">7 轮</span>训练代码，让小模型的预测误差降低了 <span class="l">5.8%</span>。</p>
+    </a>
+    <a class="run" href="#cfd">
+      <span class="run-fig">7 轮</span>
+      <h2 class="run-name">模拟水坝决口的水流 <span class="go" aria-hidden="true">↓</span></h2>
+      <p>想算得更快，却连着三次算崩；它退回稳妥设置，把不合物理的误差一轮轮压小，只是还没到零。</p>
+    </a>
+    <a class="run" href="#fea">
+      <span class="run-fig">8 轮</span>
+      <h2 class="run-name">找仿真软件的计算极限 <span class="go" aria-hidden="true">↓</span></h2>
+      <p>给一根梁不断加力，像猜数字一样对半试探，<span class="l">8 轮</span>逼近软件算不动的临界点。这不是梁能扛住的力。</p>
+    </a>
+    <a class="run" href="#ai4ai">
+      <span class="run-fig">$6.12</span>
+      <h2 class="run-name">用便宜模型做研究 <span class="go" aria-hidden="true">↓</span></h2>
+      <p>只给 <span class="l">50 美元</span>，用贵模型的几组都花光了；Raven 配便宜模型只花 <span class="l">6.12 美元</span>，训出全场最好的模型。</p>
+    </a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ============ nanochat ============ -->
+<section class="sec sec-nano" id="nanochat">
+  <div class="sec-head">
+    <p class="sec-tag">实验一 · nanochat</p>
+    <h2><span class="l">Raven 改了 7 轮训练代码：</span><span class="l">同样训练 20 分钟，</span><span class="l">模型猜得更准了</span></h2>
+    <p class="sec-sub">nanochat 是一个训练小型语言模型的项目。规则固定：一张 A800 显卡，每次只训练 20 分钟。Raven（由 DeepSeek v4.1-flash 驱动，装了 ai4ai 插件）每一轮读上一轮的结果，自己修改训练代码 <code>train.py</code>，再提交新的训练，一共 7 轮。</p>
+  </div>
+
+  <div class="nano-claim">
+    <div class="big" aria-label="val_bpb 从 0.9956 降到 0.9381">
+      <span class="from">0.9956</span><span class="arrow">→</span><span class="to">0.9381</span>
+    </div>
+    <div class="claim-text">
+      <p class="metric"><strong>val_bpb，越低越好</strong></p>
+      <p>官方 <code>train.py</code> 的起点是 0.9956；第 7 轮的最终方案是 0.9381（3 次不同随机种子训练的平均，±0.0007），<strong>降低了 5.8%</strong>。</p>
+    </div>
+  </div>
+
+  <figure class="chart-wrap">
+    <div id="chart-nano" class="chart"></div>
+    <figcaption>灰点：每一次训练（170 次已出结果，另有 2 次未出结果）。蓝线：每轮最好的方案，取多次训练的平均，竖线是上下一个标准差。虚线：官方 <code>train.py</code> 的起点。鼠标移到点上可以看具体数值。</figcaption>
+  </figure>
+
+  <div class="nano-win">
+      <h3><span class="l">还没到头：</span><span class="l">实验停下，</span><span class="l">是因为 GPU 时间用完了，</span><span class="l">不是成绩不涨了</span></h3>
+      <p>最后两轮（第 6、7 轮）每一轮的进步都远大于随机波动（0.0013），曲线还在往下走。7 轮一共训练 172 次，没有一次崩溃，用掉了 3600 GPU 分钟预算里的 3586 分钟。</p>
+  </div>
+
+  <details class="more">
+    <summary>val_bpb 是什么</summary>
+    <p class="more-p">它衡量模型读到没见过的文字时有多“意外”：让模型逐个预测下一个字，把预测的不确定程度折算成“每个字节多少比特”。数越低，说明模型猜得越准。</p>
+  </details>
+  <details class="more">
+    <summary>最终方案比官方代码改了哪 7 处</summary>
+      <ol class="changes">
+        <li>每一步喂给模型的数据量减半（batch 2<sup>19</sup> → 2<sup>18</sup>），20 分钟里能走的步数从 1540 增到 3055</li>
+        <li>新加一张可学习的查表，专门记“前后两个 token”的组合，行数是词表的 100 倍（819200 行）</li>
+        <li>查表的结果在第 0 层之后就加进模型</li>
+        <li>学习率 <code>MATRIX_LR</code> 从 0.04 降到 0.02</li>
+        <li>注意力的短窗口从 1024 缩到 256</li>
+        <li>模型加宽：<code>ASPECT_RATIO</code> 64 → 80（宽度 512 → 640）</li>
+        <li>评测时的 batch 固定为 128</li>
+      </ol>
+  </details>
+
+  <details class="more">
+    <summary>查看每一轮的最好方案</summary>
+    <div class="tbl-scroll"><table class="tbl" id="tbl-nano">
+      <thead><tr><th>轮次</th><th>方案</th><th class="n">val_bpb</th><th class="n">种子</th><th class="n">GPU 分钟</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </details>
+
+  <p class="fine">说明：最终方案目前只有 3 个种子，Raven 在报告里建议补到 7~8 个。模型加宽后每一步慢了约 30%，20 分钟里的步数从 3055 降到 2363，但分数仍然更低，这是固定时间下的净效果，符合规则。“真改进”的标准是和上一轮最优相比 Welch |t| &gt; 3 且 |Δ| &gt; 0.002；第 1 轮 9 个候选都没过，从第 2 轮起每轮都有新的最优。</p>
+</section>
+
+<!-- ============ CFD ============ -->
+<section class="sec" id="cfd">
+  <div class="sec-head">
+    <p class="sec-tag">实验二 · CFD 溃坝模拟</p>
+    <h2><span class="l">为了提速连崩三次，</span><span class="l">它退回稳妥设置，</span><span class="l">再把误差一轮轮压小</span></h2>
+    <p class="sec-sub">CFD（计算流体力学）是用计算机模拟液体和气体的流动。这场实验用开源软件 OpenFOAM 模拟二维溃坝：一堵水柱突然倒下，冲向对面的墙。同一个算例、81648 个网格，一共跑了 7 轮（第 0~6 轮）。每个网格里记着“这里有多少比例是水”（软件里叫 alpha），只能在 0 到 1 之间；算成负数或大于 1，就是不合物理的误差，叫“越界”。</p>
+  </div>
+
+  <figure class="frames">
+    <ol class="frames-row">
+      <li><img src="assets/img/cfd/r0.webp" width="480" height="480" alt="第 0 轮：水冲上右侧墙面，水面完整" loading="lazy"><b>第 0 轮</b><span>稳妥设置，跑到终点</span></li>
+      <li class="bad"><img src="assets/img/cfd/r1.webp" width="480" height="480" alt="第 1 轮：水体碎成一团" loading="lazy"><b>第 1 轮</b><span>提速，t=0.4 算崩</span></li>
+      <li class="bad"><img src="assets/img/cfd/r2.webp" width="480" height="480" alt="第 2 轮：水体碎裂，出现红色越界格" loading="lazy"><b>第 2 轮</b><span>再提速，t=0.5 算崩</span></li>
+      <li class="bad"><img src="assets/img/cfd/r3.webp" width="480" height="480" alt="第 3 轮：水面糊成一片，大量红色越界格" loading="lazy"><b>第 3 轮</b><span>再提速，t=0.65 算崩</span></li>
+      <li><img src="assets/img/cfd/r4.webp" width="480" height="480" alt="第 4 轮：水冲上右侧墙面，水面完整" loading="lazy"><b>第 4 轮</b><span>退回稳妥，跑到终点</span></li>
+      <li><img src="assets/img/cfd/r5.webp" width="480" height="480" alt="第 5 轮：水冲上右侧墙面" loading="lazy"><b>第 5 轮</b><span>误差更小，水面变糊</span></li>
+      <li><img src="assets/img/cfd/r6.webp" width="480" height="480" alt="第 6 轮：水冲上右侧墙面" loading="lazy"><b>第 6 轮</b><span>误差最小</span></li>
+    </ol>
+    <figcaption>每轮一帧，取自素材包里的求解动画。深蓝是水，浅色是空气，红点是越界的格子。跑到终点的几轮取水冲上右墙的同一时刻；算崩的几轮取停下前的最后一帧。t 是模拟里的时间，终点是 t=1.0。<button type="button" class="play" data-dialog="cfd-motion">▶ 播放完整求解动画（英文版）</button></figcaption>
+  </figure>
+  <dialog class="motion-dlg" id="cfd-motion" aria-label="CFD 溃坝完整求解动画">
+    <form method="dialog"><button class="dlg-x" aria-label="关闭">关闭 ×</button></form>
+    <video src="assets/motion/cfd_readme_vertical_en.mp4" controls playsinline preload="none"></video>
+  </dialog>
+  
+
+  <div class="pts pts-2">
+    <div>
+      <h3>先想提速：步子越迈越大，三次都半路算崩</h3>
+      <p>第 1~3 轮把每一步往前算的时间一次比一次放大（软件里的 maxCo，从 1 放到 20、100、500），越界的格子从 0 个冒到 241、3877、1241 个，三轮都没算到终点。</p>
+      <figure class="chart-wrap chart-mini"><div id="chart-cfd-a" class="chart"></div></figure>
+    </div>
+    <div>
+      <h3>再退回稳妥：误差一轮比一轮小，但还没到零</h3>
+      <p>第 4 轮把 maxCo 退回 1，跑到终点，水量守恒；第 5、6 轮改进算水面的方法，越界幅度一路变小。判据要求水的占比严格在 0 到 1 之间，浮点计算做不到这一点：第 4~6 轮都只差 <span class="l">1e-7</span>~<span class="l">1e-10</span>，<strong>仍判为未通过</strong>。</p>
+      <figure class="chart-wrap chart-mini"><div id="chart-cfd-b" class="chart"></div></figure>
+    </div>
+  </div>
+
+  <details class="more">
+    <summary>查看每一轮改了什么</summary>
+    <div class="tbl-scroll"><table class="tbl" id="tbl-cfd">
+      <thead><tr><th class="n">轮次</th><th>改了什么</th><th>结果</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </details>
+  <p class="fine">说明：越界格数和越界幅度由渲染脚本测得；Raven 自己报告的数值测量位置不同，页面统一用前者。第 4 轮记录的是 alpha 最小值 <span class="l">−1.97e-07</span>，图上按幅度画成 <span class="l">1.97e-07</span>。</p>
+</section>
+
+
+<section class="sec" id="fea">
+  <div class="sec-head">
+    <p class="sec-tag">实验三 · FEA 悬臂梁仿真</p>
+    <h2><span class="l">像猜数字一样对半试探，</span><span class="l">8 轮逼近软件</span><span class="l">“算不动”的临界点</span></h2>
+    <p class="sec-sub"><strong>这是软件的计算极限，不是梁真能扛住的力。</strong>FEA（有限元分析）是用软件把结构切成很多小块来算受力。这场实验（2026-08-17）用开源软件 CalculiX 给一根一端固定的梁加载荷：载荷越大越难算，大到一定程度，软件就“不收敛”，也就是反复迭代也算不出结果。Raven 用二分法找这个临界点：算得出就加力，算不出就减力，每次取两者中间。</p>
+  </div>
+
+  <figure class="chart-wrap fea-chart">
+      <div id="chart-fea" class="chart"></div>
+      <figcaption><span class="l"><span class="k k-ok"></span>算得出（收敛）</span> <span class="l"><span class="k k-bad">×</span>算不出（不收敛）</span> <span class="l"><span class="k k-band"></span>临界点所在的范围，逐轮收窄</span></figcaption>
+  </figure>
+
+  <figure class="media-h">
+    <video src="assets/motion/fea_8rounds_zh.mp4" autoplay muted loop playsinline controls preload="metadata" width="1216" height="592"></video>
+    <figcaption>8 轮求解过程的动画（素材包成品）：左边两幅是梁的受力和变形，右边是每轮试探的载荷。</figcaption>
+  </figure>
+
+  <div class="pts pts-3">
+    <div>
+      <h3>先大步，再对半</h3>
+      <p>第 0 轮 <span class="l">2000 kN</span> 算不出，第 1 轮降到 <span class="l">1800 kN</span> 算得出；之后每轮都取“最大的算得出”和“最小的算不出”的中间值。</p>
+    </div>
+    <div>
+      <h3>最后夹在两个载荷之间</h3>
+      <p><span class="l">1962.5 kN</span> 还算得出，<span class="l">1965.625 kN</span> 算不出。实验记录为“二分法收敛”、正常完成，全过程 107 条事件记录。</p>
+    </div>
+    <div>
+      <h3>梁本身扛不了这么大的力</h3>
+      <p>按材料和截面算，这根梁的理论塑性极限只有 <span class="l">62.5 kN</span>，8 轮的载荷都远远超过它。约 <span class="l">1962.5 kN</span> 只是软件还能算完的最大载荷。</p>
+    </div>
+  </div>
+
+  <details class="more">
+    <summary>查看每一轮的载荷和结果</summary>
+    <div class="tbl-scroll"><table class="tbl tbl-fea" id="tbl-fea">
+      <colgroup><col class="c-r"><col class="c-l"><col class="c-o"><col class="c-t"></colgroup>
+      <thead><tr><th class="n">轮次</th><th class="n">载荷 (kN)</th><th>结果</th><th class="n">机时</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </details>
+
+</section>
+
+
+<section class="sec" id="ai4ai">
+  <div class="sec-head">
+    <p class="sec-tag">实验四 · AI4AI 成本对比</p>
+    <h2><span class="l">Raven 配便宜模型：</span><span class="l">花的钱少得多，</span><span class="l">成绩依然排在前面</span></h2>
+    <p class="sec-sub">这是另一场实验，预算规则和 nanochat 板块不同，数字不能互相比较。任务：用 nanochat 准备一个 50M 预训练模型，比 BPB（预测文字的误差，越低越好；A800 基线 1.108）。Raven 或 Claude Code 各配一个模型，在两种预算下各比一次。</p>
+  </div>
+
+  <ul class="legend" aria-label="图例">
+    <li><span class="k k-v41"></span>Raven · V4.1（便宜模型）</li>
+    <li><span class="k k-raven"></span>Raven · 其他模型</li>
+    <li><span class="k k-cc"></span>Claude Code · Opus 5（对照）</li>
+  </ul>
+  <div class="ai-grid">
+    <div class="ai-panel">
+      <h3>只给 5 小时，钱不设上限</h3>
+      <p class="ai-say"><strong>成绩同在 1.037 量级，成本差 40 倍。</strong>V4.1 花 $0.97，Opus 5 花 $39.41。同用 Opus 5，Raven 1.038，Claude Code 1.053。</p>
+      <div id="chart-ai-5h" class="chart"></div>
+    </div>
+    <div class="ai-panel">
+      <h3>只给 50 美元，时间不设上限</h3>
+      <p class="ai-say"><strong>只花 $6.12，拿到全场最好的 0.965。</strong>贵模型三组都花光了额度；V4.1 便宜，能跑 80 多小时，探索得更多。</p>
+      <div id="chart-ai-50" class="chart"></div>
+    </div>
+  </div>
+
+  <details class="more">
+    <summary>查看两种预算的完整数据</summary>
+    <div class="ai-tables">
+      <div class="tbl-scroll"><table class="tbl" id="tbl-ai-5h"><caption>只给 5 小时</caption><thead><tr><th>框架 · 模型</th><th class="n">耗时</th><th class="n">token</th><th class="n">成本</th><th class="n">BPB</th></tr></thead><tbody></tbody></table></div>
+      <div class="tbl-scroll"><table class="tbl" id="tbl-ai-50"><caption>只给 50 美元</caption><thead><tr><th>框架 · 模型</th><th class="n">耗时</th><th class="n">token</th><th class="n">成本</th><th class="n">BPB</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </details>
+
+  <div class="method">
+    <p class="method-lead">harness 的作用不是让模型更聪明，而是让模型稳定地工作。<br>不信模型自述，只信可核对的证据。</p>
+    <details class="more">
+      <summary>Raven 是怎么做到的</summary>
+      <dl class="method-list">
+        <div><dt>多智能体编排</dt><dd>按契约交接产物，不做观点协商；写代码与跑实验分开，测量不被污染；共享记忆支撑长程，同时省 token。</dd></div>
+        <div><dt>Research</dt><dd>按预算、取回量、充分性动态调策略；难易判断基于已取回的证据，不是先验。</dd></div>
+        <div><dt>Code</dt><dd>实现之外加独立验收与测试；客观信息由工具机器读取，不取模型陈述。</dd></div>
+        <div><dt>值守</dt><dd>自主提交、排时间查看、决策重做或终止；自写定时器、心跳与会话保持。</dd></div>
+        <div><dt>ai4ai 流程</dt><dd>提出方向（DR + 广度优先）→ 实现 → 验证有效性 → 实测 → 带证据地结束，或深度优先下探。</dd></div>
+        <div><dt>方案种子库</dt><dd>记录已试过与未试过的方向，让 Raven 了解现状，并能探索与组合新方向。</dd></div>
+      </dl>
+    </details>
+  </div>
+</section>
+
+
+</main>
+
+<footer class="foot">
+  <h2>数据出处</h2>
+  <ul>
+    <li><strong>nanochat</strong>：ar-r15 实验说明（nanochat/README.md）、每轮最好方案（round_best.csv）与全部训练记录（all_trials.csv）。GPU 分钟 3586 / 3600 取自 README。</li>
+    <li><strong>CFD / FEA</strong>：素材包 cfd-fea/README 的每轮对照表；动画为素材包成品。</li>
+    <li><strong>AI4AI</strong>：Raven × ai4ai 数据页（Raven-ai4ai-data.pptx）。</li>
+  </ul>
+  <p><a href="#top">回到顶部 ↑</a></p>
+</footer>
+
+<script src="vendor/d3.min.js"></script>
+<script src="vendor/plot.umd.min.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/charts.js"></script>
+</body>
+</html>
