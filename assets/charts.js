@@ -12,11 +12,11 @@
 
   // ---------- nanochat ----------
   const ORDER = ["start", "R1", "R2", "R3", "R4", "R5", "R6", "R7"];
-  const LABEL = Object.fromEntries(ORDER.map((r, i) => [r, i === 0 ? L("起点", "Start") : roundName(i)]));
+  const LABEL = Object.fromEntries(ORDER.map((r, i) => [r, i === 0 ? L("初始", "Initial") : roundName(i)]));
   const idx = r => ORDER.indexOf(r);
   const trials = D.nanochat.trials.map((t, i) => ({
     ...t, x: idx(t.round) + (((i * 0.6180339) % 1) - 0.5) * 0.42,
-    label: LABEL[t.round], name: t.variant || L("起点候选", "starting candidate")
+    label: LABEL[t.round], name: t.variant || L("初始候选", "Initial candidate")
   }));
   const best = D.nanochat.best;
   const official = best[0];
@@ -25,7 +25,7 @@
 
   function nano(el) {
     const w = el.clientWidth, narrow = w < 600;
-    const SHORT = { start: L("起点", "Start"), R1: "1", R2: "2", R3: "3", R4: "4", R5: "5", R6: "6", R7: "7" };
+    const SHORT = { start: L("初始", "Initial"), R1: "1", R2: "2", R3: "3", R4: "4", R5: "5", R6: "6", R7: "7" };
     return Plot.plot({
       width: w, height: narrow ? 360 : Math.max(340, Math.min(420, w * 0.36)), marginLeft: narrow ? 50 : 64, marginRight: narrow ? 64 : 90, marginTop: 30, marginBottom: 44,
       style: baseStyle,
@@ -34,28 +34,29 @@
       marks: [
         Plot.gridY({ stroke: C.line, strokeOpacity: 1 }),
         Plot.ruleY([official.mean], { stroke: C.ink2, strokeDasharray: "5,5" }),
-        Plot.text([official], { x: 7.5, y: "mean", text: () => L("官方 train.py 0.9956", "official train.py 0.9956"), textAnchor: "end", dy: -9, fill: C.ink2, fontSize: 14 }),
+        Plot.text([official], { x: 7.5, y: "mean", text: () => L("官方基线 0.9956", "Official baseline 0.9956"), textAnchor: "end", dy: -9, fill: C.ink2, fontSize: 14 }),
         Plot.dot(trials, { x: "x", y: "v", r: 3.4, fill: C.cool, fillOpacity: 0.75,
-          channels: { [L("轮次", "Round")]: "label", [L("候选", "Candidate")]: "name", [L("种子", "Seed")]: "seed", val_bpb: d => fmt(d.v) },
+          channels: { [L("轮次", "Round")]: "label", [L("候选方案", "Candidate")]: "name", [L("随机种子", "Seed")]: "seed", val_bpb: d => fmt(d.v) },
           tip: { ...tipOpts, format: { x: false, y: false } } }),
         Plot.ruleX(line, { x: "x", y1: d => d.mean - d.sd, y2: d => d.mean + d.sd, stroke: C.warm, strokeWidth: 2 }),
         Plot.line(line, { x: "x", y: "mean", stroke: C.warm, strokeWidth: 2.5 }),
         Plot.dot(line, { x: "x", y: "mean", r: 5, fill: C.warm, stroke: C.bg, strokeWidth: 1.5,
-          channels: { [L("轮次", "Round")]: "label", [L("最好方案", "Best recipe")]: "winner", [L("均值", "Mean")]: d => fmt(d.mean), [L("标准差", "SD")]: d => fmt(d.sd), [L("种子数", "Seeds")]: "seeds" },
+          channels: { [L("轮次", "Round")]: "label", [L("最优方案", "Best configuration")]: d => WINNERS[best.findIndex(b => b.winner === d.winner)], [L("均值", "Mean")]: d => fmt(d.mean), [L("标准差", "SD")]: d => fmt(d.sd), [L("种子数", "Seeds")]: "seeds" },
           tip: { ...tipOpts, format: { x: false, y: false } } }),
         Plot.text([final], { x: "x", y: "mean", text: () => "0.9381", dx: 10, textAnchor: "start", fill: C.warm, fontSize: narrow ? 16 : 20, fontWeight: 700 }),
-        narrow ? null : Plot.text([line[0]], { x: "x", y: "mean", text: () => L("每步 batch 减半", "half the batch per step"), dx: 10, dy: 16, textAnchor: "start", fill: C.ink2, fontSize: 13 })
+        narrow ? null : Plot.text([line[0]], { x: "x", y: "mean", text: () => L("训练批量减半", "Training batch halved"), dx: 10, dy: 16, textAnchor: "start", fill: C.ink2, fontSize: 13 })
       ]
     });
   }
   const tb = document.querySelector("#tbl-nano tbody");
   const nanoRows = [official, ...best.slice(1)];
-  // 中文沿用任务书 round_best 表的写法；英文取 round_best.csv 原文（-> 与 x 换成 → 与 ×）
-  const ZH = ["官方 train.py", "TBS 2^18（每步 batch 减半）", "r1-02（没有候选过判据）", "r2-08 可学习的哈希 token-pair 表，10×→100×",
-    "r3-04 MATRIX_LR 0.04→0.02", "r4-01 短窗 1024→256、ASPECT_RATIO 64→80、浅层注入", "r5-01", "r6-04", "r7-02（最终）"];
-  const enWinner = s => s.replace(/->/g, "→").replace(/(\d)x\b/g, "$1×");
+  const WINNERS = EN
+    ? ["Official train.py (baseline)", "TBS 2^18 (training batch halved)", "r1-02 (no candidate met the improvement criterion)", "r2-08 Learnable hash embedding table for token pairs, 10×→100×",
+      "r3-04 MATRIX_LR 0.04→0.02", "r4-01 Local window 1024→256, ASPECT_RATIO 64→80, embedding added at an earlier layer", "r5-01", "r6-04", "r7-02 (final configuration)"]
+    : ["官方 train.py（基线）", "TBS 2^18（训练批量减半）", "r1-02（无候选达到改进判据）", "r2-08 可学习的 token 对哈希嵌入表，10×→100×",
+      "r3-04 MATRIX_LR 0.04→0.02", "r4-01 局部窗口 1024→256、ASPECT_RATIO 64→80、嵌入加入位置前移", "r5-01", "r6-04", "r7-02（最终方案）"];
   tb.innerHTML = nanoRows.map((b, i) => {
-    const shown = EN ? (i === nanoRows.length - 1 ? `${enWinner(b.winner)} (final)` : enWinner(b.winner)) : ZH[i];
+    const shown = WINNERS[i];
     return `<tr class="${b.round === "R7" ? "best" : ""}"><td>${LABEL[b.round]}</td><td>${shown}</td><td class="n">${fmt(b.mean)} ± ${fmt(b.sd)}</td><td class="n">${b.seeds}</td><td class="n">${b.gpu == null ? L("同上", "same run") : Math.round(b.gpu)}</td></tr>`;
   }).join("");
 
@@ -65,11 +66,11 @@
   function cfdAChart(el) {
     const w = el.clientWidth, narrow = w < 460;
     const lab = d => narrow ? L(`${d.cells} 格`, `${d.cells}`)
-      : (d.cells === 0 ? L("0 格 · 跑到终点", "0\nran to the end") : L(`${d.cells} 格 · t=${d.stop} 停`, `${d.cells}\nstopped at t=${d.stop}`));
+      : (d.cells === 0 ? L("0 格 · 完成模拟", "0\ncompleted") : L(`${d.cells} 格 · t=${d.stop} 终止`, `${d.cells}\nstopped at t=${d.stop}`));
     return Plot.plot({
       width: w, height: 210, marginLeft: 56, marginTop: 26, marginBottom: 36, style: baseStyle,
       x: { domain: cfdA.map(d => d.r), tickFormat: roundName, label: null, tickSize: 0, padding: 0.35 },
-      y: { label: L("越界的格子数", "out-of-bounds cells"), grid: true, domain: [0, EN ? 4900 : 4400] },
+      y: { label: L("越界单元数", "Cells with bound violations"), grid: true, domain: [0, EN ? 4900 : 4400] },
       marks: [
         Plot.gridY({ stroke: C.line, strokeOpacity: 1 }),
         Plot.barY(cfdA, { x: "r", y: "cells", fill: d => d.cells === 0 ? C.cool : C.bad }),
@@ -83,7 +84,7 @@
     return Plot.plot({
       width: w, height: 210, marginLeft: 56, marginRight: 30, marginTop: 26, marginBottom: 36, style: baseStyle,
       x: { domain: cfdB.map(d => d.r), tickFormat: roundName, label: null, tickSize: 0, padding: 0.5 },
-      y: { type: "log", label: L("越界幅度（对数刻度，越低越好）", "out-of-bounds size (log scale, lower is better)"), grid: true, domain: [5e-11, 1e-6], ticks: [1e-10, 1e-9, 1e-8, 1e-7, 1e-6], tickFormat: d => d.toExponential(0) },
+      y: { type: "log", label: L("越界幅度（对数刻度，越低越好）", "Bound violation (log scale, lower is better)"), grid: true, domain: [5e-11, 1e-6], ticks: [1e-10, 1e-9, 1e-8, 1e-7, 1e-6], tickFormat: d => d.toExponential(0) },
       marks: [
         Plot.gridY([1e-10, 1e-9, 1e-8, 1e-7, 1e-6], { stroke: C.line, strokeOpacity: 1 }),
         Plot.line(cfdB, { x: "r", y: "mag", stroke: C.warm, strokeWidth: 2 }),
@@ -96,13 +97,13 @@
   }
   // 英文表格：参数名保持原样，其余按 cfd-fea/README 的每轮对照表译出
   const CFD_EN = {
-    0: ["maxCo 1", "Ran to the end (t=1.0), 0 cells out of bounds"],
-    1: ["maxCo 20, cAlpha 1", "241 cells out of bounds, stopped at t=0.4"],
-    2: ["maxCo 100, cAlpha 0.5", "3877 cells out of bounds, stopped at t=0.5"],
-    3: ["maxCo 500, cAlpha 0", "1241 cells out of bounds, stopped at t=0.65"],
-    4: ["maxCo 1, output 10× more often", "Ran to the end, water volume conserved, alpha minimum −1.97e-07"],
-    5: ["cAlpha 1→0.5, nAlphaSubCycles 2→4", "Out-of-bounds down to 6.0e-08, blurrier water surface"],
-    6: ["nAlphaCorr 2→4, MULESCorr off", "Out-of-bounds down to 1.36e-10"]
+    0: ["maxCo 1", "Completed at t=1.0; 0 cells with bound violations"],
+    1: ["maxCo 20, cAlpha 1", "241 cells with bound violations; stopped at t=0.4"],
+    2: ["maxCo 100, cAlpha 0.5", "3877 cells with bound violations; stopped at t=0.5"],
+    3: ["maxCo 500, cAlpha 0", "1241 cells with bound violations; stopped at t=0.65"],
+    4: ["maxCo 1, output frequency increased 10×", "Completed; water volume conserved; minimum alpha −1.97e-07"],
+    5: ["cAlpha 1→0.5, nAlphaSubCycles 2→4", "Bound violation reduced to 6.0e-08; more diffuse interface"],
+    6: ["nAlphaCorr 2→4, MULESCorr disabled", "Bound violation reduced to 1.36e-10"]
   };
   document.querySelector("#tbl-cfd tbody").innerHTML = D.cfd.map(d => {
     const [chg, res] = EN ? CFD_EN[d.r] : [d.change, d.result];
@@ -112,7 +113,7 @@
   // ---------- FEA ----------
   const MT = { 0: "20.0", 1: "15.3", 2: "15.5", 3: "15.5", 4: "21.5", 5: "17.5", 6: "16.0", 7: "17.5" }; // cfd-fea/README.md 机时列
   const fea = D.fea.map(d => ({ ...d, t: MT[d.r] }));
-  const okName = ok => ok ? L("收敛", "converged") : L("不收敛", "did not converge");
+  const okName = ok => ok ? L("收敛", "Converged") : L("未收敛", "Did not converge");
   // 每轮之后"最大的算得出"与"最小的算不出"之间的区间
   const brackets = [];
   let lo = null, hi = null;
@@ -129,7 +130,7 @@
     return Plot.plot({
       width: w, height: narrow ? 300 : 340, marginLeft: 64, marginRight: 20, marginTop: 30, marginBottom: 36, style: baseStyle,
       x: { domain: [-0.5, 7.5], ticks: [0, 1, 2, 3, 4, 5, 6, 7], tickFormat: r => narrow ? `${r}` : roundName(r), label: narrow ? L("轮次 →", "Round →") : null, labelAnchor: "right", tickSize: 0 },
-      y: { label: L("载荷 (kN)", "load (kN)"), grid: true, domain: [1780, 2020] },
+      y: { label: L("载荷 (kN)", "Load (kN)"), grid: true, domain: [1780, 2020] },
       marks: [
         Plot.gridY({ stroke: C.line, strokeOpacity: 1 }),
         Plot.areaY(band, { x: "x", y1: "lo", y2: "hi", fill: C.warm, fillOpacity: 0.12 }),
@@ -140,7 +141,7 @@
           tip: { ...tipOpts, format: { x: false, y: false, symbol: false, stroke: false, fill: false } } }),
         Plot.text(fea.filter(d => d.ok && keep(d)), { x: "r", y: "load", text: d => `${d.load}`, dy: 18, fill: C.ink, fontSize: 13 }),
         Plot.text(fea.filter(d => !d.ok && keep(d)), { x: "r", y: "load", text: d => `${d.load}`, dy: -16, fill: C.ink, fontSize: 13 }),
-        Plot.text(narrow ? [] : [lastB], { x: 7.4, y: 1815, text: () => L(`临界点在 ${lastB.lo} – ${lastB.hi} kN 之间`, `The limit lies between ${lastB.lo} and ${lastB.hi} kN`), textAnchor: "end", fill: C.warm, fontSize: 15, fontWeight: 700 })
+        Plot.text(narrow ? [] : [lastB], { x: 7.4, y: 1815, text: () => L(`收敛边界区间：${lastB.lo} – ${lastB.hi} kN`, `Convergence limit: ${lastB.lo}–${lastB.hi} kN`), textAnchor: "end", fill: C.warm, fontSize: 15, fontWeight: 700 })
       ]
     });
   }
@@ -163,15 +164,15 @@
       const txt = `${narrow && isCC(d.who) ? "Claude Code" : d.name}  ${d.bpb.toFixed(3)}`;
       return { ...d, txt, lx: a.lx ?? d.cost_v, ly: a.ly ?? d.bpb, side: a.side || "left", link: !!a.link };
     });
-    const ch = { [L("框架", "Setup")]: "name", [L("耗时", "Time")]: "time", [L("token", "Tokens")]: "tokens", [L("成本", "Cost")]: "cost", BPB: "bpb" };
+    const ch = { [L("框架与模型", "Framework and model")]: "name", [L("耗时", "Time")]: "time", [L("Token 数", "Tokens")]: "tokens", [L("成本", "Cost")]: "cost", BPB: "bpb" };
     return Plot.plot({
       width: w, height: narrow ? 270 : 290, marginLeft: 56, marginRight: 24, marginTop: 24, marginBottom: 44, style: baseStyle,
-      x: { type: "log", domain: xdom, label: L("成本（美元，对数刻度） →", "cost (USD, log scale) →"), tickFormat: d => `$${d}`, ticks: [0.5, 1, 2, 5, 10, 20, 50, 100].filter(t => t >= xdom[0] && t <= xdom[1]) },
+      x: { type: "log", domain: xdom, label: L("成本（美元，对数刻度） →", "Cost (USD, log scale) →"), tickFormat: d => `$${d}`, ticks: [0.5, 1, 2, 5, 10, 20, 50, 100].filter(t => t >= xdom[0] && t <= xdom[1]) },
       y: { label: L("BPB ↓ 越低越好", "BPB ↓ lower is better"), grid: true, domain: ydom, tickFormat: ".3f" },
       marks: [
         Plot.gridY({ stroke: C.line, strokeOpacity: 1 }),
         cap ? Plot.ruleX([cap], { stroke: C.ink2, strokeDasharray: "4,4" }) : null,
-        cap ? Plot.text([cap], { x: d => d, y: ydom[1], text: () => L("50 美元额度", "$50 budget"), dx: -6, dy: 2, textAnchor: "end", lineAnchor: "top", fill: C.ink2, fontSize: 13 }) : null,
+        cap ? Plot.text([cap], { x: d => d, y: ydom[1], text: () => L("50 美元预算", "$50 budget"), dx: -6, dy: 2, textAnchor: "end", lineAnchor: "top", fill: C.ink2, fontSize: 13 }) : null,
         Plot.link(labs.filter(d => d.link), { x1: "lx", y1: "ly", x2: "cost_v", y2: "bpb", stroke: C.ink2, strokeWidth: 1 }),
         Plot.dot(data.filter(d => !isCC(d.who)), { x: "cost_v", y: "bpb", r: 7, fill: d => inkOf(d.who), stroke: C.bg, strokeWidth: 1.5,
           channels: ch, tip: { ...tipOpts, format: { x: false, y: false, fill: false } } }),

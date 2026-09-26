@@ -1172,7 +1172,7 @@ window.RAVEN = {
   {
    "r": 0,
    "change": "maxCo 1",
-   "result": "跑到终点 t=1.0，0 格越界",
+   "result": "完成模拟（t=1.0），越界单元数为 0",
    "phase": "A",
    "cells": 0,
    "stop": "1.0"
@@ -1180,7 +1180,7 @@ window.RAVEN = {
   {
    "r": 1,
    "change": "maxCo 20，cAlpha 1",
-   "result": "241 格越界，t=0.4 停",
+   "result": "241 个单元越界，在 t=0.4 终止",
    "phase": "A",
    "cells": 241,
    "stop": "0.4"
@@ -1188,7 +1188,7 @@ window.RAVEN = {
   {
    "r": 2,
    "change": "maxCo 100，cAlpha 0.5",
-   "result": "3877 格越界，t=0.5 停",
+   "result": "3877 个单元越界，在 t=0.5 终止",
    "phase": "A",
    "cells": 3877,
    "stop": "0.5"
@@ -1196,15 +1196,15 @@ window.RAVEN = {
   {
    "r": 3,
    "change": "maxCo 500，cAlpha 0",
-   "result": "1241 格越界，t=0.65 停",
+   "result": "1241 个单元越界，在 t=0.65 终止",
    "phase": "A",
    "cells": 1241,
    "stop": "0.65"
   },
   {
    "r": 4,
-   "change": "maxCo 1，输出加密 10 倍",
-   "result": "跑到终点，水量守恒，alpha 最小 −1.97e-07",
+   "change": "maxCo 1，输出频率提高 10 倍",
+   "result": "完成模拟，水量守恒，alpha 最小值为 −1.97e-07",
    "phase": "B",
    "mag": 1.97e-07,
    "label": "−1.97e-07"
@@ -1212,15 +1212,15 @@ window.RAVEN = {
   {
    "r": 5,
    "change": "cAlpha 1→0.5，nAlphaSubCycles 2→4",
-   "result": "越界降到 6.0e-08，水面变糊",
+   "result": "越界幅度降至 6.0e-08，界面更弥散",
    "phase": "B",
    "mag": 6e-08,
    "label": "6.0e-08"
   },
   {
    "r": 6,
-   "change": "nAlphaCorr 2→4，MULESCorr 关",
-   "result": "越界降到 1.36e-10",
+   "change": "nAlphaCorr 2→4，关闭 MULESCorr",
+   "result": "越界幅度降至 1.36e-10",
    "phase": "B",
    "mag": 1.36e-10,
    "label": "1.36e-10"
